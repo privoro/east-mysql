@@ -74,9 +74,9 @@ describe("adapter test", function () {
 
             expect(obj.config).to.be.an("object")
                 .to.be.eql({
-                    migrationFile: "migrationTemplate.js",
-                    migrationTable: "_migrations"
-                });
+                migrationFile: "migrationTemplate.js",
+                migrationTable: "_migrations"
+            });
 
         });
 
@@ -348,8 +348,9 @@ describe("adapter test", function () {
 
         describe("post-connection", function () {
 
-            var obj;
+            var obj, seedsObj;
             beforeEach(function () {
+
 
                 obj = new Adapter({
                     url: "some url"
@@ -357,6 +358,12 @@ describe("adapter test", function () {
 
                 obj.db = db;
 
+                seedsObj = new Adapter({
+                    url: "some url"
+                });
+
+                seedsObj.db = db;
+                seedsObj.config.migrationTable = "_seeds";
             });
 
             describe("#disconnect", function () {
@@ -513,7 +520,7 @@ describe("adapter test", function () {
 
             describe("#unmarkExecuted", function () {
 
-                it("should mark the migration as executed", function () {
+                it("should remove the migration from executed list", function () {
 
                     var cb = sinon.spy();
 
@@ -531,7 +538,7 @@ describe("adapter test", function () {
 
                 });
 
-                it("should handle an insert error", function () {
+                it("should handle a record deletion error", function () {
 
                     var cb = sinon.spy();
 
@@ -546,6 +553,42 @@ describe("adapter test", function () {
                         .calledWith("DELETE FROM _migrations WHERE name = ?", [
                             "2_file"
                         ]);
+
+                });
+
+            });
+
+            describe("#resetExecuted", function () {
+
+                it("should reset the migrations table", function () {
+
+                    var cb = sinon.spy();
+
+                    seedsObj.db.query.yields(null);
+
+                    seedsObj.resetExecuted(cb);
+
+                    expect(cb).to.be.calledOnce
+                        .calledWithExactly();
+
+                    expect(seedsObj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _seeds");
+
+                });
+
+                it("should handle table truncate error", function () {
+
+                    var cb = sinon.spy();
+
+                    seedsObj.db.query.yields("err");
+
+                    seedsObj.resetExecuted(cb);
+
+                    expect(cb).to.be.calledOnce
+                        .calledWithExactly("err");
+
+                    expect(seedsObj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _seeds");
 
                 });
 
