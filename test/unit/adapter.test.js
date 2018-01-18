@@ -348,8 +348,9 @@ describe("adapter test", function () {
 
         describe("post-connection", function () {
 
-            var obj;
+            var obj, seedsObj;
             beforeEach(function () {
+
 
                 obj = new Adapter({
                     url: "some url"
@@ -357,6 +358,12 @@ describe("adapter test", function () {
 
                 obj.db = db;
 
+                seedsObj = new Adapter({
+                    url: "some url"
+                });
+
+                seedsObj.db = db;
+                seedsObj.config.migrationTable = "_seeds";
             });
 
             describe("#disconnect", function () {
@@ -557,15 +564,15 @@ describe("adapter test", function () {
 
                     var cb = sinon.spy();
 
-                    obj.db.query.yields(null);
+                    seedsObj.db.query.yields(null);
 
-                    obj.resetExecuted(cb);
+                    seedsObj.resetExecuted(cb);
 
                     expect(cb).to.be.calledOnce
                         .calledWithExactly();
 
-                    expect(obj.db.query).to.be.calledOnce
-                        .calledWithExactly("TRUNCATE TABLE _migrations");
+                    expect(seedsObj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _seeds");
 
                 });
 
@@ -573,15 +580,15 @@ describe("adapter test", function () {
 
                     var cb = sinon.spy();
 
-                    obj.db.query.yields("err");
+                    seedsObj.db.query.yields("err");
 
-                    obj.resetExecuted(cb);
+                    seedsObj.resetExecuted(cb);
 
                     expect(cb).to.be.calledOnce
                         .calledWithExactly("err");
 
-                    expect(obj.db.query).to.be.calledOnce
-                        .calledWithExactly("TRUNCATE TABLE _migrations");
+                    expect(seedsObj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _seeds");
 
                 });
 
