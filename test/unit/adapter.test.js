@@ -74,9 +74,9 @@ describe("adapter test", function () {
 
             expect(obj.config).to.be.an("object")
                 .to.be.eql({
-                    migrationFile: "migrationTemplate.js",
-                    migrationTable: "_migrations"
-                });
+                migrationFile: "migrationTemplate.js",
+                migrationTable: "_migrations"
+            });
 
         });
 
@@ -513,7 +513,7 @@ describe("adapter test", function () {
 
             describe("#unmarkExecuted", function () {
 
-                it("should mark the migration as executed", function () {
+                it("should remove the migration from executed list", function () {
 
                     var cb = sinon.spy();
 
@@ -531,7 +531,7 @@ describe("adapter test", function () {
 
                 });
 
-                it("should handle an insert error", function () {
+                it("should handle a record deletion error", function () {
 
                     var cb = sinon.spy();
 
@@ -546,6 +546,42 @@ describe("adapter test", function () {
                         .calledWith("DELETE FROM _migrations WHERE name = ?", [
                             "2_file"
                         ]);
+
+                });
+
+            });
+
+            describe("#resetExecuted", function () {
+
+                it("should reset the migrations table", function () {
+
+                    var cb = sinon.spy();
+
+                    obj.db.query.yields(null);
+
+                    obj.resetExecuted(cb);
+
+                    expect(cb).to.be.calledOnce
+                        .calledWithExactly();
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWithExactly("TRUNCATE TABLE _migrations");
+
+                });
+
+                it("should handle table truncate error", function () {
+
+                    var cb = sinon.spy();
+
+                    obj.db.query.yields("err");
+
+                    obj.resetExecuted(cb);
+
+                    expect(cb).to.be.calledOnce
+                        .calledWithExactly("err");
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWithExactly("TRUNCATE TABLE _migrations");
 
                 });
 
