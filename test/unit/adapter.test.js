@@ -348,22 +348,14 @@ describe("adapter test", function () {
 
         describe("post-connection", function () {
 
-            var obj, seedsObj;
+            var obj;
             beforeEach(function () {
-
 
                 obj = new Adapter({
                     url: "some url"
                 });
 
                 obj.db = db;
-
-                seedsObj = new Adapter({
-                    url: "some url"
-                });
-
-                seedsObj.db = db;
-                seedsObj.config.migrationTable = "_seeds";
             });
 
             describe("#disconnect", function () {
@@ -564,15 +556,15 @@ describe("adapter test", function () {
 
                     var cb = sinon.spy();
 
-                    seedsObj.db.query.yields(null);
+                    obj.db.query.yields(null);
 
-                    seedsObj.resetExecuted(cb);
+                    obj.resetExecuted(cb);
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _migrations");
 
                     expect(cb).to.be.calledOnce
                         .calledWithExactly();
-
-                    expect(seedsObj.db.query).to.be.calledOnce
-                        .calledWith("TRUNCATE TABLE _seeds");
 
                 });
 
@@ -580,15 +572,45 @@ describe("adapter test", function () {
 
                     var cb = sinon.spy();
 
-                    seedsObj.db.query.yields("err");
+                    obj.db.query.yields("err");
 
-                    seedsObj.resetExecuted(cb);
+                    obj.resetExecuted(cb);
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _migrations");
 
                     expect(cb).to.be.calledOnce
                         .calledWithExactly("err");
 
-                    expect(seedsObj.db.query).to.be.calledOnce
-                        .calledWith("TRUNCATE TABLE _seeds");
+                });
+
+            });
+
+            describe("#beforeMigration", function () {
+
+                it("should call resetExecuted if resetExecution flag is set", function () {
+
+                    var cb = sinon.spy();
+                    obj.resetExecuted = sinon.stub();
+                    obj.config.resetExecution = true;
+
+                    obj.beforeMigration(cb);
+
+                    expect(obj.resetExecuted).to.be.calledOnce
+                        .calledWithExactly(cb);
+
+                });
+
+                it("should not call resetExecuted if flag not set", function () {
+
+                    var cb = sinon.spy();
+                    obj.resetExecuted = sinon.stub();
+                    obj.config.resetExecution = false;
+
+                    obj.beforeMigration(cb);
+
+                    expect(cb).to.be.calledOnce;
+                    expect(obj.resetExecuted).to.not.be.called;;
 
                 });
 
