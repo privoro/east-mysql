@@ -588,7 +588,7 @@ describe("adapter test", function () {
 
             describe("#beforeMigration", function () {
 
-                it("should run if migration table is _seeds", function () {
+                it("should call resetExecuted if resetExecution flag is set", function () {
 
                     var cb = sinon.spy();
                     obj.resetExecuted = sinon.stub();
@@ -601,7 +601,7 @@ describe("adapter test", function () {
 
                 });
 
-                it("should handle table truncate error", function () {
+                it("should not call resetExecuted if flag not set", function () {
 
                     var cb = sinon.spy();
                     obj.resetExecuted = sinon.stub();
