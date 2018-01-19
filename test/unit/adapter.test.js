@@ -594,6 +594,35 @@ describe("adapter test", function () {
 
             });
 
+            describe("#beforeMigration", function () {
+
+                it("should run if migration table is _seeds", function () {
+
+                    var cb = sinon.spy();
+                    seedsObj.resetExecuted = sinon.stub();
+
+                    seedsObj.beforeMigration(cb);
+
+                    expect(seedsObj.resetExecuted).to.be.calledOnce
+                        .calledWithExactly(cb);
+
+                });
+
+                it("should handle table truncate error", function () {
+
+                    var cb = sinon.spy();
+                    seedsObj.resetExecuted = sinon.stub();
+                    seedsObj.config.migrationTable = "_migrations";
+
+                    seedsObj.beforeMigration(cb);
+
+                    expect(cb).to.be.calledOnce;
+                    expect(seedsObj.resetExecuted).to.not.be.called;;
+
+                });
+
+            });
+
         });
 
     });
