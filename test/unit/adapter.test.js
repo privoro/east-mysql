@@ -348,22 +348,14 @@ describe("adapter test", function () {
 
         describe("post-connection", function () {
 
-            var obj, seedsObj;
+            var obj;
             beforeEach(function () {
-
 
                 obj = new Adapter({
                     url: "some url"
                 });
 
                 obj.db = db;
-
-                seedsObj = new Adapter({
-                    url: "some url"
-                });
-
-                seedsObj.db = db;
-                seedsObj.config.migrationTable = "_seeds";
             });
 
             describe("#disconnect", function () {
@@ -564,15 +556,15 @@ describe("adapter test", function () {
 
                     var cb = sinon.spy();
 
-                    seedsObj.db.query.yields(null);
+                    obj.db.query.yields(null);
 
-                    seedsObj.resetExecuted(cb);
+                    obj.resetExecuted(cb);
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _migrations");
 
                     expect(cb).to.be.calledOnce
                         .calledWithExactly();
-
-                    expect(seedsObj.db.query).to.be.calledOnce
-                        .calledWith("TRUNCATE TABLE _seeds");
 
                 });
 
@@ -580,15 +572,15 @@ describe("adapter test", function () {
 
                     var cb = sinon.spy();
 
-                    seedsObj.db.query.yields("err");
+                    obj.db.query.yields("err");
 
-                    seedsObj.resetExecuted(cb);
+                    obj.resetExecuted(cb);
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _migrations");
 
                     expect(cb).to.be.calledOnce
                         .calledWithExactly("err");
-
-                    expect(seedsObj.db.query).to.be.calledOnce
-                        .calledWith("TRUNCATE TABLE _seeds");
 
                 });
 
@@ -599,11 +591,12 @@ describe("adapter test", function () {
                 it("should run if migration table is _seeds", function () {
 
                     var cb = sinon.spy();
-                    seedsObj.resetExecuted = sinon.stub();
+                    obj.resetExecuted = sinon.stub();
+                    obj.config.resetExecution = true;
 
-                    seedsObj.beforeMigration(cb);
+                    obj.beforeMigration(cb);
 
-                    expect(seedsObj.resetExecuted).to.be.calledOnce
+                    expect(obj.resetExecuted).to.be.calledOnce
                         .calledWithExactly(cb);
 
                 });
@@ -611,13 +604,13 @@ describe("adapter test", function () {
                 it("should handle table truncate error", function () {
 
                     var cb = sinon.spy();
-                    seedsObj.resetExecuted = sinon.stub();
-                    seedsObj.config.migrationTable = "_migrations";
+                    obj.resetExecuted = sinon.stub();
+                    obj.config.resetExecution = false;
 
-                    seedsObj.beforeMigration(cb);
+                    obj.beforeMigration(cb);
 
                     expect(cb).to.be.calledOnce;
-                    expect(seedsObj.resetExecuted).to.not.be.called;;
+                    expect(obj.resetExecuted).to.not.be.called;;
 
                 });
 
