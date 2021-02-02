@@ -75,7 +75,8 @@ describe("adapter test", function () {
             expect(obj.config).to.be.an("object")
                 .to.be.eql({
                 migrationFile: "migrationTemplate.js",
-                migrationTable: "_migrations"
+                migrationTable: "_migrations",
+                nameFieldLength: 50
             });
 
         });
@@ -86,14 +87,16 @@ describe("adapter test", function () {
                 url: "some url",
                 eastMysql: {
                     migrationFile: 'overrideMigrateTemplate.js',
-                    migrationTable: '_override'
+                    migrationTable: '_override',
+                    nameFieldLength: 255
                 }
             });
 
             expect(obj.config).to.be.an("object")
                 .to.be.eql({
                 migrationFile: "overrideMigrateTemplate.js",
-                migrationTable: "_override"
+                migrationTable: "_override",
+                nameFieldLength: 255
             });
 
         });
