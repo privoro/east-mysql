@@ -74,9 +74,27 @@ describe("adapter test", function () {
 
             expect(obj.config).to.be.an("object")
                 .to.be.eql({
-                    migrationFile: "migrationTemplate.js",
-                    migrationTable: "_migrations"
-                });
+                migrationFile: "migrationTemplate.js",
+                migrationTable: "_migrations"
+            });
+
+        });
+
+        it("should override the config with params.config", function () {
+
+            var obj = new Adapter({
+                url: "some url",
+                eastMysql: {
+                    migrationFile: 'overrideMigrateTemplate.js',
+                    migrationTable: '_override'
+                }
+            });
+
+            expect(obj.config).to.be.an("object")
+                .to.be.eql({
+                migrationFile: "overrideMigrateTemplate.js",
+                migrationTable: "_override"
+            });
 
         });
 
@@ -338,7 +356,6 @@ describe("adapter test", function () {
                 });
 
                 obj.db = db;
-
             });
 
             describe("#disconnect", function () {
@@ -495,7 +512,7 @@ describe("adapter test", function () {
 
             describe("#unmarkExecuted", function () {
 
-                it("should mark the migration as executed", function () {
+                it("should remove the migration from executed list", function () {
 
                     var cb = sinon.spy();
 
@@ -513,7 +530,7 @@ describe("adapter test", function () {
 
                 });
 
-                it("should handle an insert error", function () {
+                it("should handle a record deletion error", function () {
 
                     var cb = sinon.spy();
 
@@ -528,6 +545,72 @@ describe("adapter test", function () {
                         .calledWith("DELETE FROM _migrations WHERE name = ?", [
                             "2_file"
                         ]);
+
+                });
+
+            });
+
+            describe("#resetExecuted", function () {
+
+                it("should reset the migrations table", function () {
+
+                    var cb = sinon.spy();
+
+                    obj.db.query.yields(null);
+
+                    obj.resetExecuted(cb);
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _migrations");
+
+                    expect(cb).to.be.calledOnce
+                        .calledWithExactly();
+
+                });
+
+                it("should handle table truncate error", function () {
+
+                    var cb = sinon.spy();
+
+                    obj.db.query.yields("err");
+
+                    obj.resetExecuted(cb);
+
+                    expect(obj.db.query).to.be.calledOnce
+                        .calledWith("TRUNCATE TABLE _migrations");
+
+                    expect(cb).to.be.calledOnce
+                        .calledWithExactly("err");
+
+                });
+
+            });
+
+            describe("#beforeMigration", function () {
+
+                it("should call resetExecuted if resetExecution flag is set", function () {
+
+                    var cb = sinon.spy();
+                    obj.resetExecuted = sinon.stub();
+                    obj.config.resetExecution = true;
+
+                    obj.beforeMigration(cb);
+
+                    expect(obj.resetExecuted).to.be.calledOnce
+                        .calledWithExactly(cb);
+
+                });
+
+                it("should not call resetExecuted if flag not set", function () {
+
+                    var cb = sinon.spy();
+                    obj.resetExecuted = sinon.stub();
+                    obj.config.resetExecution = false;
+
+                    obj.beforeMigration(cb);
+
+                    expect(cb).to.be.calledOnce;
+                    expect(obj.resetExecuted).to.not.be.called;;
 
                 });
 
